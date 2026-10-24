@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Комикс моего детства</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <h1>Комикс моего детства</h1>
+        <p>Нажмите на картинку, чтобы увеличить и прочитать</p>
+    </header>
+
+    <div class="gallery-container">
+        
+        <!-- 1. Дейзи Дак -->
+        <div class="comic-card" onclick="openModal(this)">
+            <img src="img/1.jpg" alt="Дейзи Дак">
+        </div>
+
+        <!-- 2. Микки и Минни (дом) -->
+        <div class="comic-card" onclick="openModal(this)">
+            <img src="img/2.jpg" alt="Микки и Минни продают дом">
+        </div>
+
+        <!-- 3. Дональд и Дейзи -->
+        <div class="comic-card" onclick="openModal(this)">
+            <img src="img/3.jpg" alt="Дональд и Дейзи спорят">
+        </div>
+
+        <!-- 4. Микки и Минни (рыбалка) -->
+        <div class="comic-card" onclick="openModal(this)">
+            <img src="img/4.jpg" alt="Микки и Минни рыбачат">
+        </div>
+
+        <!-- 5. Микки, Минни и Гуфи -->
+        <div class="comic-card" onclick="openModal(this)">
+            <img src="img/5.jpg" alt="Микки, Минни и Гуфи в кафе">
+        </div>
+
+        <!-- 6. Том и Джерри (спят) -->
+        <div class="comic-card" onclick="openModal(this)">
+            <img src="img/6.jpg" alt="Том и Джерри спят">
+        </div>
+
+        <!-- 7. Том и Джерри (Джордж Вашингтон) -->
+        <div class="comic-card" onclick="openModal(this)">
+            <img src="img/7.jpg" alt="Том и Джерри и Джордж Вашингтон">
+        </div>
+
+        <!-- 8. Том и Джерри (Хэллоуин) -->
+        <div class="comic-card" onclick="openModal(this)">
+            <img src="img/8.jpg" alt="Том и Джерри Хэллоуин">
+        </div>
+
+        <!-- 9. Том и Джерри (Тыква) -->
+        <div class="comic-card" onclick="openModal(this)">
+            <img src="img/9.jpg" alt="Том и Джерри и тыква">
+        </div>
+
+        <!-- 10. Том и Джерри (Клубника) -->
+        <div class="comic-card" onclick="openModal(this)">
+            <img src="img/10.jpg" alt="Том и Джерри и клубника">
+        </div>
+
+        <!-- 11. Том и Джерри (Белка) -->
+        <div class="comic-card" onclick="openModal(this)">
+            <img src="img/11.jpg" alt="Том и Джерри и белка">
+        </div>
+
+        <!-- 12. Том и Джерри (Бьют Тома) -->
+        <div class="comic-card" onclick="openModal(this)">
+            <img src="img/12.jpg" alt="Том и Джерри дерутся">
+        </div>
+
+    </div>
+
+    <!-- Модальное окно (теперь с кнопками управления) -->
+    <div id="myModal" class="modal">
+        <span class="close" onclick="closeModal()">&times;</span>
+        
+        <!-- Панель с кнопками лупы -->
+        <div class="zoom-controls">
+            <button onclick="zoomOut()" title="Уменьшить">➖</button>
+            <button onclick="resetZoom()" title="Сбросить масштаб">🔄</button>
+            <button onclick="zoomIn()" title="Увеличить">➕</button>
+        </div>
+
+        <!-- Контейнер для прокрутки увеличенной картинки -->
+        <div class="img-container">
+            <img class="modal-content" id="img01">
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 Мой сайт ностальгии. Сделано с душой.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
