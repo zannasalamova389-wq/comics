@@ -1,87 +1,129 @@
-var modal = document.getElementById("myModal");
-var modalImg = document.getElementById("img01");
-var currentScale = 1; // Текущий масштаб
-var isDragging = false;
-var startX, startY, scrollLeft, scrollTop;
-var imgContainer = document.querySelector('.img-container');
+// Список картинок
+const comicPages = [
+  "img1.jpg", "img2.jpg", "img3.jpg", "img4.jpg", "img5.jpg", "img6.jpg",
+  "img7.jpg", "img8.jpg", "img9.jpg", "img10.jpg", "img11.jpg", "img12.jpg"
+];
 
-// Функция открытия окна
-function openModal(element) {
-    modal.style.display = "block";
-    var imgSrc = element.querySelector('img').src;
-    modalImg.src = imgSrc;
-    resetZoom(); // Сбрасываем масштаб при открытии новой картинки
-}
+let currentIndex = 0;
+let currentZoom = 1; // 1 = 100%
+let isDragging = false;
+let startX, startY;
+let translateX = 0, translateY = 0;
 
-// Функция закрытия окна
-function closeModal() {
-    modal.style.display = "none";
+// Элементы
+const comicImage = document.getElementById('comicImage');
+const viewport = document.getElementById('viewport');
+const counter = document.getElementById('counter');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const zoomInBtn = document.getElementById('zoomInBtn');
+const zoomOutBtn = document.getElementById('zoomOutBtn');
+const zoomLevel = document.getElementById('zoomLevel');
+
+// 1. Смена картинок
+function updateImage() {
+  comicImage.style.opacity = 0;
+  
+  setTimeout(() => {
+    comicImage.src = 'images/' + comicPages[currentIndex];
+    counter.textContent = (currentIndex + 1) + ' / ' + comicPages.length;
+    
+    // Сбрасываем зум при смене картинки
     resetZoom();
+
+    prevBtn.disabled = currentIndex === 0;
+    nextBtn.disabled = currentIndex === comicPages.length - 1;
+    
+    comicImage.style.opacity = 1;
+  }, 150);
 }
 
-// Функция увеличения
+prevBtn.addEventListener('click', () => {
+  if (currentIndex > 0) {
+    currentIndex--;
+    updateImage();
+  }
+});
+
+nextBtn.addEventListener('click', () => {
+  if (currentIndex < comicPages.length - 1) {
+    currentIndex++;
+    updateImage();
+  }
+});
+
+// 2. Логика увеличения (Зум)
+function applyTransform() {
+  comicImage.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentZoom})`;
+  zoomLevel.textContent = Math.round(currentZoom * 100) + '%';
+}
+
 function zoomIn() {
-    if (currentScale < 4) { // Максимальное увеличение (4x)
-        currentScale += 0.5;
-        updateScale();
-    }
+  if (currentZoom < 3) { // Максимальное увеличение 300%
+    currentZoom += 0.5;
+    applyTransform();
+  }
 }
 
-// Функция уменьшения
 function zoomOut() {
-    if (currentScale > 0.5) { // Минимальное уменьшение
-        currentScale -= 0.5;
-        updateScale();
+  if (currentZoom > 1) { // Минимальный зум 100% (не меньше)
+    currentZoom -= 0.5;
+    if (currentZoom === 1) {
+      translateX = 0;
+      translateY = 0;
     }
+    applyTransform();
+  }
 }
 
-// Функция сброса масштаба
 function resetZoom() {
-    currentScale = 1;
-    updateScale();
-    // Возвращаем прокрутку в центр
-    imgContainer.scrollLeft = 0;
-    imgContainer.scrollTop = 0;
+  currentZoom = 1;
+  translateX = 0;
+  translateY = 0;
+  applyTransform();
 }
 
-// Применение масштаба к картинке
-function updateScale() {
-    modalImg.style.transform = `scale(${currentScale})`;
-}
+zoomInBtn.addEventListener('click', zoomIn);
+zoomOutBtn.addEventListener('click', zoomOut);
 
-// Закрытие по клику вне картинки (на черном фоне)
-window.onclick = function(event) {
-    if (event.target == modal || event.target == imgContainer) {
-        closeModal();
-    }
-}
-
-// --- Логика перетаскивания (для удобства, когда картинка увеличена) ---
-imgContainer.addEventListener('mousedown', (e) => {
-    if (currentScale > 1) {
-        isDragging = true;
-        startX = e.pageX - imgContainer.offsetLeft;
-        startY = e.pageY - imgContainer.offsetTop;
-        scrollLeft = imgContainer.scrollLeft;
-        scrollTop = imgContainer.scrollTop;
-    }
+// 3. Логика перетаскивания (Drag) для увеличенной картинки
+viewport.addEventListener('mousedown', (e) => {
+  if (currentZoom > 1) {
+    isDragging = true;
+    startX = e.clientX - translateX;
+    startY = e.clientY - translateY;
+  }
 });
 
-imgContainer.addEventListener('mouseleave', () => {
-    isDragging = false;
+viewport.addEventListener('mousemove', (e) => {
+  if (isDragging) {
+    translateX = e.clientX - startX;
+    translateY = e.clientY - startY;
+    applyTransform();
+  }
 });
 
-imgContainer.addEventListener('mouseup', () => {
-    isDragging = false;
-});
+viewport.addEventListener('mouseup', () => { isDragging = false; });
+viewport.addEventListener('mouseleave', () => { isDragging = false; });
 
-imgContainer.addEventListener('mousemove', (e) => {
-    if (!isDragging) return;
-    e.preventDefault();
-    const x = e.pageX - imgContainer.offsetLeft;
-    const y = e.pageY - imgContainer.offsetTop;
-    const walkX = (x - startX) * 2; // Скорость прокрутки
-    const walkY = (y - startY) * 2;
-    imgContainer.scrollLeft = scrollLeft - walkX;
-    imgContainer.scrollTop = scrollTop - walkY;
-});
+// Для сенсорных экранов (телефоны)
+viewport.addEventListener('touchstart', (e) => {
+  if (currentZoom > 1) {
+    isDragging = true;
+    startX = e.touches[0].clientX - translateX;
+    startY = e.touches[0].clientY - translateY;
+  }
+}, { passive: true });
+
+viewport.addEventListener('touchmove', (e) => {
+  if (isDragging) {
+    translateX = e.touches[0].clientX - startX;
+    translateY = e.touches[0].clientY - startY;
+    applyTransform();
+  }
+}, { passive: true });
+
+viewport.addEventListener('touchend', () => { isDragging = false; });
+
+// Запуск
+updateImage();
