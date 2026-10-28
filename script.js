@@ -27,7 +27,6 @@ const comicTitle = document.getElementById('comicTitle');
 const counter = document.getElementById('counter');
 const prevBtn = document.getElementById('prevBtn');
 const nextBtn = document.getElementById('nextBtn');
-const comicPage = document.querySelector('.comic-page');
 
 // 1. Функция перелистывания
 function updateImage() {
@@ -45,7 +44,6 @@ function updateImage() {
     comicImage.style.opacity = 1;
     comicTitle.style.opacity = 1;
     
-    // Сбрасываем зум при перелистывании
     comicImage.classList.remove('zoomed');
   }, 150); 
 }
@@ -65,29 +63,50 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowRight' && currentIndex < comicData.length - 1) { currentIndex++; updateImage(); }
 });
 
-// 4. Свайпы
+// 4. УЛУЧШЕННЫЕ СВАЙПЫ (Работают по всему экрану)
 let touchStartX = 0;
 let touchEndX = 0;
+let touchStartY = 0;
+let touchEndY = 0;
 
-comicPage.addEventListener('touchstart', e => {
+// Отслеживаем начало касания на всем документе
+document.addEventListener('touchstart', e => {
   touchStartX = e.changedTouches[0].screenX;
+  touchStartY = e.changedTouches[0].screenY;
 }, { passive: true });
 
-comicPage.addEventListener('touchend', e => {
+// Отслеживаем конец касания на всем документе
+document.addEventListener('touchend', e => {
   touchEndX = e.changedTouches[0].screenX;
+  touchEndY = e.changedTouches[0].screenY;
   handleSwipe();
 }, { passive: true });
 
 function handleSwipe() {
-  if (touchEndX < touchStartX - 50) { // Свайп влево
-    if (currentIndex < comicData.length - 1) { currentIndex++; updateImage(); }
-  }
-  if (touchEndX > touchStartX + 50) { // Свайп вправо
-    if (currentIndex > 0) { currentIndex--; updateImage(); }
+  const swipeThresholdX = 40; // Минимальная длина свайпа по горизонтали
+  const swipeThresholdY = 60; // Максимальная длина свайпа по вертикали (чтобы не мешать скроллу, если он есть)
+
+  // Проверяем, что свайп был горизонтальным (а не вертикальным движением пальца)
+  if (Math.abs(touchEndX - touchStartX) > Math.abs(touchEndY) && Math.abs(touchEndY) < swipeThresholdY) {
+    
+    // Свайп влево -> Вперед
+    if (touchEndX < touchStartX - swipeThresholdX) {
+      if (currentIndex < comicData.length - 1) {
+        currentIndex++;
+        updateImage();
+      }
+    }
+    // Свайп вправо -> Назад
+    else if (touchEndX > touchStartX + swipeThresholdX) {
+      if (currentIndex > 0) {
+        currentIndex--;
+        updateImage();
+      }
+    }
   }
 }
 
-// 5. Увеличение по клику (вызывается из HTML)
+// 5. Увеличение по клику
 window.toggleZoom = function(img) {
   img.classList.toggle('zoomed');
 };
