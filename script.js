@@ -20,7 +20,7 @@ const comicData = [
 ];
 
 let currentIndex = 0;
-let currentZoom = 100; // Текущий уровень зума
+let currentZoom = 100;
 
 const comicImage = document.getElementById('comicImage');
 const comicTitle = document.getElementById('comicTitle');
@@ -30,6 +30,7 @@ const nextBtn = document.getElementById('nextBtn');
 const zoomInBtn = document.getElementById('zoomInBtn');
 const zoomOutBtn = document.getElementById('zoomOutBtn');
 const zoomLevel = document.getElementById('zoomLevel');
+const comicPage = document.querySelector('.comic-page'); // Берем контейнер картинки
 
 // 1. Функция перелистывания
 function updateImage() {
@@ -47,7 +48,6 @@ function updateImage() {
     comicImage.style.opacity = 1;
     comicTitle.style.opacity = 1;
     
-    // Сбрасываем зум при смене картинки
     resetZoom();
   }, 150); 
 }
@@ -59,7 +59,6 @@ function updateZoom() {
     comicImage.style.transform = 'scale(1)';
   } else {
     comicImage.classList.add('zoomed');
-    // Переводим проценты в масштаб (150% = 1.5)
     comicImage.style.transform = `scale(${currentZoom / 100})`;
   }
   zoomLevel.textContent = currentZoom + '%';
@@ -71,25 +70,25 @@ function resetZoom() {
 }
 
 zoomInBtn.addEventListener('click', () => {
-  if (currentZoom < 250) { // Максимум 250%
+  if (currentZoom < 250) {
     currentZoom += 25;
     updateZoom();
   }
 });
 
 zoomOutBtn.addEventListener('click', () => {
-  if (currentZoom > 100) { // Минимум 100%
+  if (currentZoom > 100) {
     currentZoom -= 25;
     updateZoom();
   }
 });
 
-// 3. Увеличение по клику (быстрое)
+// 3. Увеличение по клику
 window.toggleZoom = function(img) {
   if (currentZoom === 100) {
-    currentZoom = 200; // При клике сразу ставим 200%
+    currentZoom = 200;
   } else {
-    currentZoom = 100; // Если уже увеличено, возвращаем 100%
+    currentZoom = 100;
   }
   updateZoom();
 };
@@ -109,38 +108,48 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowRight' && currentIndex < comicData.length - 1) { currentIndex++; updateImage(); }
 });
 
-// 6. Свайпы
+// 6. СВАЙПЫ (Обновленная логика)
 let touchStartX = 0;
-let touchEndX = 0;
 let touchStartY = 0;
+let touchEndX = 0;
 let touchEndY = 0;
 
-document.addEventListener('touchstart', e => {
+// Добавляем обработчики прямо на контейнер с картинкой
+comicPage.addEventListener('touchstart', (e) => {
   touchStartX = e.changedTouches[0].screenX;
   touchStartY = e.changedTouches[0].screenY;
 }, { passive: true });
 
-document.addEventListener('touchend', e => {
+comicPage.addEventListener('touchend', (e) => {
   touchEndX = e.changedTouches[0].screenX;
   touchEndY = e.changedTouches[0].screenY;
-  handleSwipe();
-}, { passive: true });
+  
+  // Вычисляем разницу
+  const diffX = touchEndX - touchStartX;
+  const diffY = touchEndY - touchStartY;
 
-function handleSwipe() {
-  const swipeThresholdX = 40;
-  const swipeThresholdY = 60;
-
-  // Если картинка увеличена, свайп не перелистывает, чтобы можно было ее рассматривать
+  // Если свайп сделан при увеличенной картинке, ничего не делаем
   if (currentZoom > 100) return;
 
-  if (Math.abs(touchEndX - touchStartX) > Math.abs(touchEndY) && Math.abs(touchEndY) < swipeThresholdY) {
-    if (touchEndX < touchStartX - swipeThresholdX) {
-      if (currentIndex < comicData.length - 1) { currentIndex++; updateImage(); }
-    } else if (touchEndX > touchStartX + swipeThresholdX) {
-      if (currentIndex > 0) { currentIndex--; updateImage(); }
+  // Проверяем, что движение было больше по горизонтали, чем по вертикали,
+  // и что это не был случайный клик (длина больше 40px)
+  if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 40) {
+    
+    if (diffX < 0) {
+      // Свайп влево (палец двигался справа налево) -> Следующая страница
+      if (currentIndex < comicData.length - 1) {
+        currentIndex++;
+        updateImage();
+      }
+    } else {
+      // Свайп вправо (палец двигался слева направо) -> Предыдущая страница
+      if (currentIndex > 0) {
+        currentIndex--;
+        updateImage();
+      }
     }
   }
-}
+}, { passive: true });
 
 // Запуск
 updateImage();
