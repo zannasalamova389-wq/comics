@@ -19,7 +19,7 @@ const comicData = [
   { file: "images/img18.jpg", title: "Дональд Дак и курочки" }
 ];
 
-et currentIndex = 0;
+let currentIndex = 0;
 let currentZoom = 100;
 
 const comicImage = document.getElementById('comicImage');
@@ -95,30 +95,47 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowRight' && currentIndex < comicData.length - 1) { currentIndex++; updateImage(); }
 });
 
-// 5. УЛУЧШЕННЫЕ СВАЙПЫ (Работают везде, включая зум)
-let startX = 0;
-let startY = 0;
+// 5. «ЯДЕРНЫЕ» СВАЙПЫ
+let touchStartX = 0;
+let touchStartY = 0;
+let touchMoved = false;
 
-// Слушаем начало касания на всем экране
-document.addEventListener('touchstart', (e) => {
-  startX = e.touches[0].clientX;
-  startY = e.touches[0].clientY;
-}, { passive: false }); // passive: false позволяет нам блокировать стандартные жесты
+// Создаем визуальный индикатор для отладки (маленький кружок)
+const debugDot = document.createElement('div');
+debugDot.style.cssText = 'position:fixed; width:10px; height:10px; background:red; border-radius:50%; pointer-events:none; z-index:9999; display:none;';
+document.body.appendChild(debugDot);
 
-// Слушаем конец касания на всем экране
-document.addEventListener('touchend', (e) => {
-  if (!startX || !startY) return;
+function handleTouchStart(e) {
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+  touchMoved = false;
+  
+  // Показываем красную точку там, где коснулись
+  debugDot.style.left = touchStartX + 'px';
+  debugDot.style.top = touchStartY + 'px';
+  debugDot.style.display = 'block';
+}
 
-  let endX = e.changedTouches[0].clientX;
-  let endY = e.changedTouches[0].clientY;
+function handleTouchMove(e) {
+  touchMoved = true;
+}
 
-  let diffX = endX - startX;
-  let diffY = endY - startY;
+function handleTouchEnd(e) {
+  debugDot.style.display = 'none';
+  
+  // Если палец не двигался (это был клик), выходим
+  if (!touchMoved) return;
 
-  // Если свайп был четко горизонтальным (больше 50px) и коротким по вертикали
-  if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50 && Math.abs(diffY) < 80) {
+  let touchEndX = e.changedTouches[0].clientX;
+  let touchEndY = e.changedTouches[0].clientY;
+
+  let diffX = touchEndX - touchStartX;
+  let diffY = touchEndY - touchStartY;
+
+  // Если свайп был четко горизонтальным (больше 40px) и не слишком вертикальным
+  if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 40 && Math.abs(diffY) < 100) {
     
-    // Если картинка увеличена, свайп не перелистывает, а просто сбрасывает зум (по желанию можно убрать)
+    // Если картинка увеличена, свайп просто сбрасывает зум
     if (currentZoom > 100) {
       resetZoom(); 
       return;
@@ -132,11 +149,12 @@ document.addEventListener('touchend', (e) => {
       if (currentIndex > 0) { currentIndex--; updateImage(); }
     }
   }
+}
 
-  // Сбрасываем координаты
-  startX = 0;
-  startY = 0;
-}, { passive: true });
+// Вешаем события на весь документ
+document.addEventListener('touchstart', handleTouchStart, { passive: true });
+document.addEventListener('touchmove', handleTouchMove, { passive: true });
+document.addEventListener('touchend', handleTouchEnd, { passive: true });
 
 // Запуск
 updateImage();
