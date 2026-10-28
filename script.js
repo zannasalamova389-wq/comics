@@ -31,11 +31,19 @@ const zoomInBtn = document.getElementById('zoomInBtn');
 const zoomOutBtn = document.getElementById('zoomOutBtn');
 const zoomLevel = document.getElementById('zoomLevel');
 
-// 1. Перелистывание
-function updateImage() {
-  comicImage.style.opacity = 0;
-  comicTitle.style.opacity = 0;
+// --- ЛОГИКА ПЕРЕЛИСТЫВАНИЯ С АНИМАЦИЕЙ ---
+function updateImage(direction = 'next') {
+  // 1. Сначала убираем старые классы анимации, если они остались
+  comicImage.classList.remove('slide-out-left', 'slide-out-right', 'slide-in-left', 'slide-in-right');
+  
+  // Если это не первая загрузка, запускаем анимацию исчезновения
+  if (direction === 'next') {
+    comicImage.classList.add('slide-out-left');
+  } else if (direction === 'prev') {
+    comicImage.classList.add('slide-out-right');
+  }
 
+  // 2. Ждем окончания анимации исчезновения (0.3s) и меняем картинку
   setTimeout(() => {
     comicImage.src = comicData[currentIndex].file;
     comicTitle.textContent = comicData[currentIndex].title;
@@ -44,13 +52,27 @@ function updateImage() {
     prevBtn.disabled = currentIndex === 0;
     nextBtn.disabled = currentIndex === comicData.length - 1;
 
-    comicImage.style.opacity = 1;
-    comicTitle.style.opacity = 1;
+    // Убираем класс исчезновения
+    comicImage.classList.remove('slide-out-left', 'slide-out-right');
+    
+    // Добавляем класс появления в зависимости от направления
+    if (direction === 'next') {
+      comicImage.classList.add('slide-in-right');
+    } else if (direction === 'prev') {
+      comicImage.classList.add('slide-in-left');
+    }
+
     resetZoom();
-  }, 150); 
+
+    // Очищаем классы появления после завершения анимации
+    setTimeout(() => {
+      comicImage.classList.remove('slide-in-left', 'slide-in-right');
+    }, 300);
+
+  }, 300); 
 }
 
-// 2. Зум
+// --- ЗУМ ---
 function updateZoom() {
   if (currentZoom === 100) {
     comicImage.classList.remove('zoomed');
@@ -80,81 +102,35 @@ window.toggleZoom = function(img) {
   updateZoom();
 };
 
-// 3. Кнопки
+// --- КНОПКИ НАВИГАЦИИ ---
 prevBtn.addEventListener('click', () => {
-  if (currentIndex > 0) { currentIndex--; updateImage(); }
+  if (currentIndex > 0) { 
+    currentIndex--; 
+    updateImage('prev'); // Передаем направление "назад"
+  }
 });
 
 nextBtn.addEventListener('click', () => {
-  if (currentIndex < comicData.length - 1) { currentIndex++; updateImage(); }
-});
-
-// 4. Клавиатура
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'ArrowLeft' && currentIndex > 0) { currentIndex--; updateImage(); }
-  if (e.key === 'ArrowRight' && currentIndex < comicData.length - 1) { currentIndex++; updateImage(); }
-});
-
-// 5. «ЯДЕРНЫЕ» СВАЙПЫ
-let touchStartX = 0;
-let touchStartY = 0;
-let touchMoved = false;
-
-// Создаем визуальный индикатор для отладки (маленький кружок)
-const debugDot = document.createElement('div');
-debugDot.style.cssText = 'position:fixed; width:10px; height:10px; background:red; border-radius:50%; pointer-events:none; z-index:9999; display:none;';
-document.body.appendChild(debugDot);
-
-function handleTouchStart(e) {
-  touchStartX = e.touches[0].clientX;
-  touchStartY = e.touches[0].clientY;
-  touchMoved = false;
-  
-  // Показываем красную точку там, где коснулись
-  debugDot.style.left = touchStartX + 'px';
-  debugDot.style.top = touchStartY + 'px';
-  debugDot.style.display = 'block';
-}
-
-function handleTouchMove(e) {
-  touchMoved = true;
-}
-
-function handleTouchEnd(e) {
-  debugDot.style.display = 'none';
-  
-  // Если палец не двигался (это был клик), выходим
-  if (!touchMoved) return;
-
-  let touchEndX = e.changedTouches[0].clientX;
-  let touchEndY = e.changedTouches[0].clientY;
-
-  let diffX = touchEndX - touchStartX;
-  let diffY = touchEndY - touchStartY;
-
-  // Если свайп был четко горизонтальным (больше 40px) и не слишком вертикальным
-  if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 40 && Math.abs(diffY) < 100) {
-    
-    // Если картинка увеличена, свайп просто сбрасывает зум
-    if (currentZoom > 100) {
-      resetZoom(); 
-      return;
-    }
-
-    if (diffX < 0) {
-      // Влево -> Вперед
-      if (currentIndex < comicData.length - 1) { currentIndex++; updateImage(); }
-    } else {
-      // Вправо -> Назад
-      if (currentIndex > 0) { currentIndex--; updateImage(); }
-    }
+  if (currentIndex < comicData.length - 1) { 
+    currentIndex++; 
+    updateImage('next'); // Передаем направление "вперед"
   }
-}
+});
 
-// Вешаем события на весь документ
-document.addEventListener('touchstart', handleTouchStart, { passive: true });
-document.addEventListener('touchmove', handleTouchMove, { passive: true });
-document.addEventListener('touchend', handleTouchEnd, { passive: true });
+// --- КЛАВИАТУРА ---
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowLeft' && currentIndex > 0) { 
+    currentIndex--; 
+    updateImage('prev'); 
+  }
+  if (e.key === 'ArrowRight' && currentIndex < comicData.length - 1) { 
+    currentIndex++; 
+    updateImage('next'); 
+  }
+});
 
-// Запуск
-updateImage();
+// Запуск при загрузке (без анимации)
+comicImage.src = comicData[currentIndex].file;
+comicTitle.textContent = comicData[currentIndex].title;
+counter.textContent = (currentIndex + 1) + ' / ' + comicData.length;
+updateZoom();

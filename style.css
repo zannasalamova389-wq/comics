@@ -8,7 +8,6 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  /* Отключаем стандартные жесты браузера, чтобы они не мешали свайпам */
   overscroll-behavior: none; 
 }
 
@@ -39,8 +38,7 @@ body {
   justify-content: center;
   width: 100%;
   position: relative;
-  /* Разрешаем вертикальную прокрутку, если она появится, но не горизонтальную */
-  touch-action: pan-y; 
+  perspective: 1000px; /* Для 3D-эффекта */
 }
 
 .comic-page img {
@@ -49,8 +47,9 @@ body {
   object-fit: contain;
   border-radius: 8px;
   box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-  transition: opacity 0.3s ease, transform 0.2s ease;
   cursor: zoom-in;
+  /* Убираем transition с transform, чтобы анимация работала четко */
+  transition: opacity 0.3s ease; 
 }
 
 /* Класс для увеличенной картинки */
@@ -62,11 +61,35 @@ body {
   height: 100vh;
   max-height: 100vh;
   background-color: #000;
-  z-index: 500; /* Картинка на слое 500 */
+  z-index: 500;
   cursor: zoom-out;
 }
 
-/* Блок кнопок масштабирования */
+/* --- АНИМАЦИИ ПЕРЕЛИСТЫВАНИЯ --- */
+@keyframes slideOutLeft {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(-100%); opacity: 0; }
+}
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes slideOutRight {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(100%); opacity: 0; }
+}
+@keyframes slideInLeft {
+  from { transform: translateX(-100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.slide-out-left { animation: slideOutLeft 0.3s forwards; }
+.slide-in-right { animation: slideInRight 0.3s forwards; }
+.slide-out-right { animation: slideOutRight 0.3s forwards; }
+.slide-in-left { animation: slideInLeft 0.3s forwards; }
+
+/* ---------------------------------- */
+
 .zoom-controls {
   display: flex;
   align-items: center;
@@ -76,7 +99,7 @@ body {
   padding: 5px 15px;
   border-radius: 20px;
   position: relative;
-  z-index: 1000; /* Кнопки всегда поверх картинки */
+  z-index: 1000;
 }
 
 .zoom-btn {
@@ -110,7 +133,6 @@ body {
   z-index: 1000;
 }
 
-/* Кнопки навигации */
 .controls {
   display: flex;
   align-items: center;
@@ -121,7 +143,7 @@ body {
   background-color: #1a1a1a;
   border-radius: 10px;
   position: relative;
-  z-index: 1000; /* Кнопки навигации всегда поверх картинки */
+  z-index: 1000;
 }
 
 .nav-btn {
