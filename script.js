@@ -19,7 +19,7 @@ const comicData = [
   { file: "images/img18.jpg", title: "Дональд Дак и курочки" }
 ];
 
-let currentIndex = 0;
+et currentIndex = 0;
 let currentZoom = 100;
 
 const comicImage = document.getElementById('comicImage');
@@ -30,9 +30,8 @@ const nextBtn = document.getElementById('nextBtn');
 const zoomInBtn = document.getElementById('zoomInBtn');
 const zoomOutBtn = document.getElementById('zoomOutBtn');
 const zoomLevel = document.getElementById('zoomLevel');
-const comicPage = document.querySelector('.comic-page'); // Берем контейнер картинки
 
-// 1. Функция перелистывания
+// 1. Перелистывание
 function updateImage() {
   comicImage.style.opacity = 0;
   comicTitle.style.opacity = 0;
@@ -47,12 +46,11 @@ function updateImage() {
 
     comicImage.style.opacity = 1;
     comicTitle.style.opacity = 1;
-    
     resetZoom();
   }, 150); 
 }
 
-// 2. Логика кнопок масштаба
+// 2. Зум
 function updateZoom() {
   if (currentZoom === 100) {
     comicImage.classList.remove('zoomed');
@@ -70,30 +68,19 @@ function resetZoom() {
 }
 
 zoomInBtn.addEventListener('click', () => {
-  if (currentZoom < 250) {
-    currentZoom += 25;
-    updateZoom();
-  }
+  if (currentZoom < 250) { currentZoom += 25; updateZoom(); }
 });
 
 zoomOutBtn.addEventListener('click', () => {
-  if (currentZoom > 100) {
-    currentZoom -= 25;
-    updateZoom();
-  }
+  if (currentZoom > 100) { currentZoom -= 25; updateZoom(); }
 });
 
-// 3. Увеличение по клику
 window.toggleZoom = function(img) {
-  if (currentZoom === 100) {
-    currentZoom = 200;
-  } else {
-    currentZoom = 100;
-  }
+  currentZoom = (currentZoom === 100) ? 200 : 100;
   updateZoom();
 };
 
-// 4. Кнопки навигации
+// 3. Кнопки
 prevBtn.addEventListener('click', () => {
   if (currentIndex > 0) { currentIndex--; updateImage(); }
 });
@@ -102,53 +89,53 @@ nextBtn.addEventListener('click', () => {
   if (currentIndex < comicData.length - 1) { currentIndex++; updateImage(); }
 });
 
-// 5. Клавиатура
+// 4. Клавиатура
 document.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowLeft' && currentIndex > 0) { currentIndex--; updateImage(); }
   if (e.key === 'ArrowRight' && currentIndex < comicData.length - 1) { currentIndex++; updateImage(); }
 });
 
-// 6. СВАЙПЫ (Обновленная логика)
-let touchStartX = 0;
-let touchStartY = 0;
-let touchEndX = 0;
-let touchEndY = 0;
+// 5. УЛУЧШЕННЫЕ СВАЙПЫ (Работают везде, включая зум)
+let startX = 0;
+let startY = 0;
 
-// Добавляем обработчики прямо на контейнер с картинкой
-comicPage.addEventListener('touchstart', (e) => {
-  touchStartX = e.changedTouches[0].screenX;
-  touchStartY = e.changedTouches[0].screenY;
-}, { passive: true });
+// Слушаем начало касания на всем экране
+document.addEventListener('touchstart', (e) => {
+  startX = e.touches[0].clientX;
+  startY = e.touches[0].clientY;
+}, { passive: false }); // passive: false позволяет нам блокировать стандартные жесты
 
-comicPage.addEventListener('touchend', (e) => {
-  touchEndX = e.changedTouches[0].screenX;
-  touchEndY = e.changedTouches[0].screenY;
-  
-  // Вычисляем разницу
-  const diffX = touchEndX - touchStartX;
-  const diffY = touchEndY - touchStartY;
+// Слушаем конец касания на всем экране
+document.addEventListener('touchend', (e) => {
+  if (!startX || !startY) return;
 
-  // Если свайп сделан при увеличенной картинке, ничего не делаем
-  if (currentZoom > 100) return;
+  let endX = e.changedTouches[0].clientX;
+  let endY = e.changedTouches[0].clientY;
 
-  // Проверяем, что движение было больше по горизонтали, чем по вертикали,
-  // и что это не был случайный клик (длина больше 40px)
-  if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 40) {
+  let diffX = endX - startX;
+  let diffY = endY - startY;
+
+  // Если свайп был четко горизонтальным (больше 50px) и коротким по вертикали
+  if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50 && Math.abs(diffY) < 80) {
     
+    // Если картинка увеличена, свайп не перелистывает, а просто сбрасывает зум (по желанию можно убрать)
+    if (currentZoom > 100) {
+      resetZoom(); 
+      return;
+    }
+
     if (diffX < 0) {
-      // Свайп влево (палец двигался справа налево) -> Следующая страница
-      if (currentIndex < comicData.length - 1) {
-        currentIndex++;
-        updateImage();
-      }
+      // Влево -> Вперед
+      if (currentIndex < comicData.length - 1) { currentIndex++; updateImage(); }
     } else {
-      // Свайп вправо (палец двигался слева направо) -> Предыдущая страница
-      if (currentIndex > 0) {
-        currentIndex--;
-        updateImage();
-      }
+      // Вправо -> Назад
+      if (currentIndex > 0) { currentIndex--; updateImage(); }
     }
   }
+
+  // Сбрасываем координаты
+  startX = 0;
+  startY = 0;
 }, { passive: true });
 
 // Запуск
