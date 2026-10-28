@@ -21,6 +21,7 @@ const comicData = [
 
 let currentIndex = 0;
 let currentZoom = 100;
+let isAnimating = false; // Защита от быстрых нажатий
 
 const comicImage = document.getElementById('comicImage');
 const comicTitle = document.getElementById('comicTitle');
@@ -31,45 +32,51 @@ const zoomInBtn = document.getElementById('zoomInBtn');
 const zoomOutBtn = document.getElementById('zoomOutBtn');
 const zoomLevel = document.getElementById('zoomLevel');
 
-// --- ЛОГИКА ПЕРЕЛИСТЫВАНИЯ С АНИМАЦИЕЙ ---
 function updateImage(direction = 'next') {
-  // 1. Сначала убираем старые классы анимации, если они остались
-  comicImage.classList.remove('slide-out-left', 'slide-out-right', 'slide-in-left', 'slide-in-right');
-  
-  // Если это не первая загрузка, запускаем анимацию исчезновения
+  if (isAnimating) return; // Если анимация идет, игнорируем клики
+  isAnimating = true;
+
+  // 1. Очищаем все старые классы
+  comicImage.className = '';
+
+  // 2. Запускаем анимацию УХОДА
   if (direction === 'next') {
     comicImage.classList.add('slide-out-left');
-  } else if (direction === 'prev') {
+  } else {
     comicImage.classList.add('slide-out-right');
   }
 
-  // 2. Ждем окончания анимации исчезновения (0.3s) и меняем картинку
+  // 3. Ждем 200 мс (пока картинка уезжает)
   setTimeout(() => {
+    // Меняем картинку и текст
     comicImage.src = comicData[currentIndex].file;
     comicTitle.textContent = comicData[currentIndex].title;
     counter.textContent = (currentIndex + 1) + ' / ' + comicData.length;
-    
     prevBtn.disabled = currentIndex === 0;
     nextBtn.disabled = currentIndex === comicData.length - 1;
-
-    // Убираем класс исчезновения
-    comicImage.classList.remove('slide-out-left', 'slide-out-right');
-    
-    // Добавляем класс появления в зависимости от направления
-    if (direction === 'next') {
-      comicImage.classList.add('slide-in-right');
-    } else if (direction === 'prev') {
-      comicImage.classList.add('slide-in-left');
-    }
-
     resetZoom();
 
-    // Очищаем классы появления после завершения анимации
+    // Убираем класс ухода
+    comicImage.classList.remove('slide-out-left', 'slide-out-right');
+    
+    // МАЛЕНЬКАЯ ПАУЗА (10 мс), чтобы телефон "увидел", что картинка новая
     setTimeout(() => {
-      comicImage.classList.remove('slide-in-left', 'slide-in-right');
-    }, 300);
+      // 4. Запускаем анимацию ПРИХОДА
+      if (direction === 'next') {
+        comicImage.classList.add('slide-in-right');
+      } else {
+        comicImage.classList.add('slide-in-left');
+      }
 
-  }, 300); 
+      // 5. Ждем окончания прихода (200 мс) и снимаем блокировку
+      setTimeout(() => {
+        comicImage.classList.remove('slide-in-left', 'slide-in-right');
+        isAnimating = false;
+      }, 200);
+
+    }, 10);
+
+  }, 200);
 }
 
 // --- ЗУМ ---
@@ -106,30 +113,24 @@ window.toggleZoom = function(img) {
 prevBtn.addEventListener('click', () => {
   if (currentIndex > 0) { 
     currentIndex--; 
-    updateImage('prev'); // Передаем направление "назад"
+    updateImage('prev'); 
   }
 });
 
 nextBtn.addEventListener('click', () => {
   if (currentIndex < comicData.length - 1) { 
     currentIndex++; 
-    updateImage('next'); // Передаем направление "вперед"
+    updateImage('next'); 
   }
 });
 
 // --- КЛАВИАТУРА ---
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'ArrowLeft' && currentIndex > 0) { 
-    currentIndex--; 
-    updateImage('prev'); 
-  }
-  if (e.key === 'ArrowRight' && currentIndex < comicData.length - 1) { 
-    currentIndex++; 
-    updateImage('next'); 
-  }
+  if (e.key === 'ArrowLeft' && currentIndex > 0) { currentIndex--; updateImage('prev'); }
+  if (e.key === 'ArrowRight' && currentIndex < comicData.length - 1) { currentIndex++; updateImage('next'); }
 });
 
-// Запуск при загрузке (без анимации)
+// Запуск
 comicImage.src = comicData[currentIndex].file;
 comicTitle.textContent = comicData[currentIndex].title;
 counter.textContent = (currentIndex + 1) + ' / ' + comicData.length;
