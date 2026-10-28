@@ -1,4 +1,3 @@
-// Массив с названиями и путями к картинкам
 const comicData = [
   { file: "images/img1.jpg", title: "Дейзи Дак — её портрет" },
   { file: "images/img2.jpg", title: "Микки Маус: Продажа квартиры" },
@@ -21,12 +20,16 @@ const comicData = [
 ];
 
 let currentIndex = 0;
+let currentZoom = 100; // Текущий уровень зума
 
 const comicImage = document.getElementById('comicImage');
 const comicTitle = document.getElementById('comicTitle');
 const counter = document.getElementById('counter');
 const prevBtn = document.getElementById('prevBtn');
 const nextBtn = document.getElementById('nextBtn');
+const zoomInBtn = document.getElementById('zoomInBtn');
+const zoomOutBtn = document.getElementById('zoomOutBtn');
+const zoomLevel = document.getElementById('zoomLevel');
 
 // 1. Функция перелистывания
 function updateImage() {
@@ -44,11 +47,54 @@ function updateImage() {
     comicImage.style.opacity = 1;
     comicTitle.style.opacity = 1;
     
-    comicImage.classList.remove('zoomed');
+    // Сбрасываем зум при смене картинки
+    resetZoom();
   }, 150); 
 }
 
-// 2. Кнопки
+// 2. Логика кнопок масштаба
+function updateZoom() {
+  if (currentZoom === 100) {
+    comicImage.classList.remove('zoomed');
+    comicImage.style.transform = 'scale(1)';
+  } else {
+    comicImage.classList.add('zoomed');
+    // Переводим проценты в масштаб (150% = 1.5)
+    comicImage.style.transform = `scale(${currentZoom / 100})`;
+  }
+  zoomLevel.textContent = currentZoom + '%';
+}
+
+function resetZoom() {
+  currentZoom = 100;
+  updateZoom();
+}
+
+zoomInBtn.addEventListener('click', () => {
+  if (currentZoom < 250) { // Максимум 250%
+    currentZoom += 25;
+    updateZoom();
+  }
+});
+
+zoomOutBtn.addEventListener('click', () => {
+  if (currentZoom > 100) { // Минимум 100%
+    currentZoom -= 25;
+    updateZoom();
+  }
+});
+
+// 3. Увеличение по клику (быстрое)
+window.toggleZoom = function(img) {
+  if (currentZoom === 100) {
+    currentZoom = 200; // При клике сразу ставим 200%
+  } else {
+    currentZoom = 100; // Если уже увеличено, возвращаем 100%
+  }
+  updateZoom();
+};
+
+// 4. Кнопки навигации
 prevBtn.addEventListener('click', () => {
   if (currentIndex > 0) { currentIndex--; updateImage(); }
 });
@@ -57,25 +103,23 @@ nextBtn.addEventListener('click', () => {
   if (currentIndex < comicData.length - 1) { currentIndex++; updateImage(); }
 });
 
-// 3. Клавиатура
+// 5. Клавиатура
 document.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowLeft' && currentIndex > 0) { currentIndex--; updateImage(); }
   if (e.key === 'ArrowRight' && currentIndex < comicData.length - 1) { currentIndex++; updateImage(); }
 });
 
-// 4. УЛУЧШЕННЫЕ СВАЙПЫ (Работают по всему экрану)
+// 6. Свайпы
 let touchStartX = 0;
 let touchEndX = 0;
 let touchStartY = 0;
 let touchEndY = 0;
 
-// Отслеживаем начало касания на всем документе
 document.addEventListener('touchstart', e => {
   touchStartX = e.changedTouches[0].screenX;
   touchStartY = e.changedTouches[0].screenY;
 }, { passive: true });
 
-// Отслеживаем конец касания на всем документе
 document.addEventListener('touchend', e => {
   touchEndX = e.changedTouches[0].screenX;
   touchEndY = e.changedTouches[0].screenY;
@@ -83,33 +127,20 @@ document.addEventListener('touchend', e => {
 }, { passive: true });
 
 function handleSwipe() {
-  const swipeThresholdX = 40; // Минимальная длина свайпа по горизонтали
-  const swipeThresholdY = 60; // Максимальная длина свайпа по вертикали (чтобы не мешать скроллу, если он есть)
+  const swipeThresholdX = 40;
+  const swipeThresholdY = 60;
 
-  // Проверяем, что свайп был горизонтальным (а не вертикальным движением пальца)
+  // Если картинка увеличена, свайп не перелистывает, чтобы можно было ее рассматривать
+  if (currentZoom > 100) return;
+
   if (Math.abs(touchEndX - touchStartX) > Math.abs(touchEndY) && Math.abs(touchEndY) < swipeThresholdY) {
-    
-    // Свайп влево -> Вперед
     if (touchEndX < touchStartX - swipeThresholdX) {
-      if (currentIndex < comicData.length - 1) {
-        currentIndex++;
-        updateImage();
-      }
-    }
-    // Свайп вправо -> Назад
-    else if (touchEndX > touchStartX + swipeThresholdX) {
-      if (currentIndex > 0) {
-        currentIndex--;
-        updateImage();
-      }
+      if (currentIndex < comicData.length - 1) { currentIndex++; updateImage(); }
+    } else if (touchEndX > touchStartX + swipeThresholdX) {
+      if (currentIndex > 0) { currentIndex--; updateImage(); }
     }
   }
 }
-
-// 5. Увеличение по клику
-window.toggleZoom = function(img) {
-  img.classList.toggle('zoomed');
-};
 
 // Запуск
 updateImage();

@@ -16,13 +16,21 @@
   
   <div class="comic-page">
     <img id="comicImage" src="" alt="Страница комикса" onclick="toggleZoom(this)">
+    
+    <!-- Кнопки масштабирования -->
+    <div class="zoom-controls">
+      <button id="zoomOutBtn" class="zoom-btn">➖</button>
+      <span id="zoomLevel" class="zoom-level">100%</span>
+      <button id="zoomInBtn" class="zoom-btn">➕</button>
+    </div>
+
     <div id="comicTitle" class="comic-title"></div>
   </div>
 
   <!-- Кнопки управления -->
   <div class="controls">
     <button id="prevBtn" class="nav-btn">← Назад</button>
-    <span id="counter" class="counter">1 / 18</span>
+    <span id="counter" class="counter">1 / 19</span>
     <button id="nextBtn" class="nav-btn">Вперёд →</button>
   </div>
 
