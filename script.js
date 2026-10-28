@@ -1,85 +1,96 @@
-const baseNames = [
-  "img1.jpg", "img2.jpg", "img3.jpg", "img4.jpg", "img5.jpg", 
-  "img6.jpg", "img7.jpg", "img8.jpg", "img9.jpg", "img10.jpg", 
-  "img11.jpg", "img12.jpg", "img13.jpg", "img14.jpg", "img15.jpg", 
-  "img16.jpg", "img17.jpg", "img18.jpg", "img19.jpg"
+// Массив с названиями и путями к картинкам
+const comicData = [
+  { file: "images/img1.jpg", title: "Дейзи Дак — её портрет" },
+  { file: "images/img2.jpg", title: "Микки Маус: Продажа квартиры" },
+  { file: "images/img3.jpg", title: "Микки и Минни на рыбалке" },
+  { file: "images/img4.jpg", title: "Микки, Минни и Гуфи" },
+  { file: "images/img5.jpg", title: "Том и Джерри: Книга о кошках" },
+  { file: "images/img6.jpg", title: "Том и Джерри: День рождения" },
+  { file: "images/img7.jpg", title: "Том и Джерри: Хэллоуин" },
+  { file: "images/img8.jpg", title: "Том и Джерри и тыква" },
+  { file: "images/img9.jpg", title: "Том и Джерри: Клубника зимой" },
+  { file: "images/img10.jpg", title: "Том и Джерри: Силач" },
+  { file: "images/img11.jpg", title: "Том и Джерри: День Вашингтона" },
+  { file: "images/img12.jpg", title: "Том и Джерри: Мыши-помощники" },
+  { file: "images/img13.jpg", title: "Минни Маус: Пропавшая сумка" },
+  { file: "images/img14.jpg", title: "Главный герой: Микки" },
+  { file: "images/img15.jpg", title: "Микки и Минни: День святого Валентина" },
+  { file: "images/img16.jpg", title: "Микки и Минни: Годовщина" },
+  { file: "images/img17.jpg", title: "Минни Маус: Дух странствий" },
+  { file: "images/img18.jpg", title: "Дональд Дак и курочки" }
 ];
 
 let currentIndex = 0;
-let currentZoom = 1;
 
 const comicImage = document.getElementById('comicImage');
+const comicTitle = document.getElementById('comicTitle');
 const counter = document.getElementById('counter');
 const prevBtn = document.getElementById('prevBtn');
 const nextBtn = document.getElementById('nextBtn');
-const zoomInBtn = document.getElementById('zoomInBtn');
-const zoomOutBtn = document.getElementById('zoomOutBtn');
-const zoomLevel = document.getElementById('zoomLevel');
-const fullscreenBtn = document.getElementById('fullscreenBtn');
-const comicPage = document.getElementById('comicPage');
+const comicPage = document.querySelector('.comic-page');
 
-// Функция загрузки картинки с проверкой путей
+// 1. Функция перелистывания
 function updateImage() {
   comicImage.style.opacity = 0;
-  currentZoom = 1;
-  applyZoom();
+  comicTitle.style.opacity = 0;
 
   setTimeout(() => {
-    const fileName = baseNames[currentIndex];
-    // Пробуем сначала загрузить из папки images, если нет - из корня
-    // Если ваши файлы лежат в корне, можно сразу написать: comicImage.src = fileName;
-    comicImage.src = "images/" + fileName; 
+    comicImage.src = comicData[currentIndex].file;
+    comicTitle.textContent = comicData[currentIndex].title;
+    counter.textContent = (currentIndex + 1) + ' / ' + comicData.length;
     
-    comicImage.onerror = function() {
-      // Если не нашлось в папке images, пробуем в корне
-      comicImage.src = fileName;
-      comicImage.onerror = function() {
-        // Если и в корне нет, показываем заглушку
-        comicImage.src = "https://via.placeholder.com/400x300/333/fff?text=Картинка+не+найдена";
-      };
-    };
-
-    counter.textContent = (currentIndex + 1) + ' / ' + baseNames.length;
     prevBtn.disabled = currentIndex === 0;
-    nextBtn.disabled = currentIndex === baseNames.length - 1;
+    nextBtn.disabled = currentIndex === comicData.length - 1;
 
     comicImage.style.opacity = 1;
-  }, 150);
+    comicTitle.style.opacity = 1;
+    
+    // Сбрасываем зум при перелистывании
+    comicImage.classList.remove('zoomed');
+  }, 150); 
 }
 
-function applyZoom() {
-  comicImage.style.transform = `scale(${currentZoom})`;
-  zoomLevel.textContent = Math.round(currentZoom * 100) + '%';
-}
-
-zoomInBtn.addEventListener('click', () => {
-  if (currentZoom < 3) { currentZoom += 0.25; applyZoom(); }
-});
-
-zoomOutBtn.addEventListener('click', () => {
-  if (currentZoom > 0.5) { currentZoom -= 0.25; applyZoom(); }
-});
-
-fullscreenBtn.addEventListener('click', () => {
-  if (!document.fullscreenElement) {
-    comicPage.requestFullscreen().catch(err => alert("Ошибка: " + err.message));
-  } else {
-    document.exitFullscreen();
-  }
-});
-
+// 2. Кнопки
 prevBtn.addEventListener('click', () => {
   if (currentIndex > 0) { currentIndex--; updateImage(); }
 });
 
 nextBtn.addEventListener('click', () => {
-  if (currentIndex < baseNames.length - 1) { currentIndex++; updateImage(); }
+  if (currentIndex < comicData.length - 1) { currentIndex++; updateImage(); }
 });
 
+// 3. Клавиатура
 document.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowLeft' && currentIndex > 0) { currentIndex--; updateImage(); }
-  else if (e.key === 'ArrowRight' && currentIndex < baseNames.length - 1) { currentIndex++; updateImage(); }
+  if (e.key === 'ArrowRight' && currentIndex < comicData.length - 1) { currentIndex++; updateImage(); }
 });
+
+// 4. Свайпы
+let touchStartX = 0;
+let touchEndX = 0;
+
+comicPage.addEventListener('touchstart', e => {
+  touchStartX = e.changedTouches[0].screenX;
+}, { passive: true });
+
+comicPage.addEventListener('touchend', e => {
+  touchEndX = e.changedTouches[0].screenX;
+  handleSwipe();
+}, { passive: true });
+
+function handleSwipe() {
+  if (touchEndX < touchStartX - 50) { // Свайп влево
+    if (currentIndex < comicData.length - 1) { currentIndex++; updateImage(); }
+  }
+  if (touchEndX > touchStartX + 50) { // Свайп вправо
+    if (currentIndex > 0) { currentIndex--; updateImage(); }
+  }
+}
+
+// 5. Увеличение по клику (вызывается из HTML)
+window.toggleZoom = function(img) {
+  img.classList.toggle('zoomed');
+};
 
 // Запуск
 updateImage();
