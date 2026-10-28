@@ -10,28 +10,37 @@
 
 <header class="header">
   <h1>📚 Комиксы из детства</h1>
-  <p>Листайте страницы и увеличивайте картинку</p>
 </header>
 
 <main class="comic-container">
   
-  <!-- Контейнер для картинки (с возможностью перетаскивания) -->
-  <div class="image-viewport" id="viewport">
+  <!-- Контейнер для картинки -->
+  <div class="comic-page" id="comicPage">
     <img id="comicImage" src="" alt="Страница комикса">
   </div>
 
-  <!-- Панель управления -->
+  <!-- ЕДИНАЯ КОМПАКТНАЯ ПАНЕЛЬ УПРАВЛЕНИЯ -->
   <div class="controls">
-    <button id="prevBtn" class="nav-btn">← Назад</button>
-    <span id="counter" class="counter">1 / 12</span>
-    <button id="nextBtn" class="nav-btn">Вперёд →</button>
-  </div>
+    
+    <!-- Левая часть: Зум -->
+    <div class="zoom-group">
+      <button id="zoomOutBtn" class="icon-btn">➖</button>
+      <span id="zoomLevel" class="zoom-text">100%</span>
+      <button id="zoomInBtn" class="icon-btn">➕</button>
+    </div>
 
-  <!-- Кнопки зума -->
-  <div class="zoom-controls">
-    <button id="zoomOutBtn" class="zoom-btn">➖</button>
-    <span id="zoomLevel" class="zoom-text">100%</span>
-    <button id="zoomInBtn" class="zoom-btn">➕</button>
+    <!-- Центральная часть: Листание -->
+    <div class="nav-group">
+      <button id="prevBtn" class="nav-btn">← Назад</button>
+      <span id="counter" class="counter">1 / 19</span>
+      <button id="nextBtn" class="nav-btn">Вперёд →</button>
+    </div>
+
+    <!-- Правая часть: Полный экран -->
+    <div class="fullscreen-group">
+      <button id="fullscreenBtn" class="icon-btn" title="На весь экран">⛶</button>
+    </div>
+
   </div>
 
 </main>
